@@ -65,10 +65,11 @@ class CustomUser(AbstractUser):
 
 class Contributor(models.Model):
     AUTHOR = "Auteur"
+    RESPONSABLE = "Responsable"
     CONTRIBUTOR = "Contributeur"
 #NOTE : Choisir choix de permissions !!
     PERMISSION_CHOICES = (
-        (AUTHOR, 'Auteur'), (CONTRIBUTOR, 'Contributeur'),
+        (AUTHOR, 'Auteur'), (CONTRIBUTOR, 'Contributeur'), (RESPONSABLE, 'Responsable')
         )
 
     user_id = models.IntegerField('user id')

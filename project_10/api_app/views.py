@@ -4,7 +4,17 @@ from rest_framework import permissions, viewsets
 from .models import CustomUser, Contributor, Project, Issue, Comment
 from .serializers import UserSerializer, ContributorSerializer, ProjectSerializer, IssueSerializer, CommentSerializer
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
+class HelloView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request):
+        content = {'message': 'Hello, GeeksforGeeks'}
+        return Response(content)
+        
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all().order_by('-email')
     serializer_class = UserSerializer
