@@ -1,34 +1,42 @@
 from .models import CustomUser, Contributor, Project, Issue, Comment
 from rest_framework import serializers
 
+class CreateContributor(serializers.Serializer):
+    class Meta:
+        fields = ['email']
 
-
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['url', 'user_id', 'first_name', 'last_name', 'email']
+        fields = ['id', 'first_name', 'last_name', 'email']
 
+class CreateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'first_name', 'last_name', 'email', 'password']
 
-class ContributorSerializer(serializers.HyperlinkedModelSerializer):
+    def create(self, validated_data):
+        user = super(CreateUserSerializer, self).create(validated_data)
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
+class ContributorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contributor
-        fields = ['url', 'user_id', 'project_id', 'permission', 'role']
+        fields = ['user_id', 'project_id', 'permission']
 
 
-class ProjectSerializer(serializers.HyperlinkedModelSerializer):
+class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ['url', 'title', 'description', 'type', 'author_user_id']
-
-        extra_kwargs = {
-            'project_id': { 'read_only': True },
-            }
+        fields = ['id', 'title', 'description', 'type', 'author_user_id']
 
 
-class IssueSerializer(serializers.HyperlinkedModelSerializer):
+class IssueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Issue
-        fields = ['url', 'title', 'description', 'tag', 'priority','assignee_user_id']
+        fields = ['title', 'description', 'tag', 'priority','assignee_user_id']
 
         extra_kwargs = {
             'created_time': { 'read_only': True },
@@ -37,10 +45,10 @@ class IssueSerializer(serializers.HyperlinkedModelSerializer):
             }
 
 
-class CommentSerializer(serializers.HyperlinkedModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['url', 'comment_id', 'description']
+        fields = ['description']
 
         extra_kwargs = {
             'created_time': { 'read_only': True },

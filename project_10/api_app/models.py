@@ -59,6 +59,20 @@ class CustomUser(AbstractUser):
 
     objects = CustomUserManager()
 
+    def contributes_in(self):
+        contrib_profiles = Contributor.objects.all().filter(user_id=self.id)
+        projects = [contributor.project_id for contributor in contrib_profiles]
+        is_contributor = Project.objects.all().filter(id__in=projects)
+
+        return is_contributor
+
+    def is_contributor(self, project_instance):
+        list_projects = self.contributes_in()
+        if project_instance in list_projects:
+            return True
+        else:
+            return False
+
     def __str__(self):
         return self.email
 
@@ -67,7 +81,6 @@ class Contributor(models.Model):
     AUTHOR = "Auteur"
     RESPONSABLE = "Responsable"
     CONTRIBUTOR = "Contributeur"
-#NOTE : Choisir choix de permissions !!
     PERMISSION_CHOICES = (
         (AUTHOR, 'Auteur'), (CONTRIBUTOR, 'Contributeur'), (RESPONSABLE, 'Responsable')
         )
@@ -75,10 +88,9 @@ class Contributor(models.Model):
     user_id = models.IntegerField('user id')
     project_id = models.IntegerField('project id')
     permission = models.CharField(choices=PERMISSION_CHOICES, max_length=20)
-    role = models.CharField('role', max_length=100)
 
     def __str__(self):
-        return self.user_id
+        return str(self.user_id)
 
 
 class Project(models.Model):
@@ -89,12 +101,33 @@ class Project(models.Model):
         (BACKEND, 'Back-End'), (FRONTEND, 'Front-End'), (ANDROID, 'Android')
         )
 
-    project_id = models.IntegerField('project id')
     title = models.CharField('title', max_length=50)
     description = models.CharField('description', max_length=250)
     type = models.CharField('type', choices=TYPE_CHOICES, max_length=20)
 #NOTE : changer on_delete
     author_user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+
+    def create_author(self):
+        contrib_profile = Contributor(user_id=self.author_user_id.id,
+                                            project_id=self.id,
+                                            permission='Auteur')
+        contrib_profile.save()
+
+        return contrib_profile
+
+    def add_contrib(self, project_id, new_contrib_id):
+        contrib_profile = Contributor(user_id=new_contrib_id,
+                                            project_id=project_id,
+                                            permission='Contributeur')
+        contrib_profile.save()
+
+        return contrib_profile
+
+    def delete_all_contrib(self):
+        Contributor.objects.filter(project_id=self.id).delete()
+
+    def delete_all_issues(self):
+        Issue.objects.filter(project_id=self.id).delete()
 
     def __str__(self):
         return self.title
@@ -125,7 +158,7 @@ class Issue(models.Model):
     tag = models.CharField('tag', choices=TAG_CHOICES, max_length=50)
     priority = models.CharField('priority', choices=PRIORITY_CHOICES, max_length=50)
     project_id = models.IntegerField('project id')
-    status = models.CharField('status', choices=TAG_CHOICES, max_length=50)
+    status = models.CharField('status', choices=STATUS_CHOICES, max_length=50)
 #NOTE : changer on_delete
     author_user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='author')
 #NOTE : moyen d'assigner l'auteur directement ? Sur une fonction, probablement.
@@ -136,7 +169,6 @@ class Issue(models.Model):
         return self.title
 
 class Comment(models.Model):
-    comment_id = models.IntegerField("comment id")
     description = models.CharField('description', max_length=250)
 #NOTE : changer on_delete
     author_user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
@@ -144,4 +176,4 @@ class Comment(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.comment_id
+        return self.description
