@@ -4,11 +4,10 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 
 
-
 class CustomUserManager(BaseUserManager):
     """
-    Custom user model manager where email is the unique identifiers
-    for authentication instead of usernames.
+    Custom user model manager where the email is the unique identifier
+    for authentication instead of the username.
     """
     def create_user(self, email, first_name, last_name, password):
         if not email:
@@ -20,7 +19,8 @@ class CustomUserManager(BaseUserManager):
 
         user = self.model(email=self.normalize_email(email),
                         first_name=first_name,
-                        last_name=last_name)
+                        last_name=last_name
+                        )
 
         user.set_password(password)
         user.save(using=self._db)
@@ -28,7 +28,7 @@ class CustomUserManager(BaseUserManager):
 
     def create_superuser(self, email, first_name, last_name, password, **extra_fields):
         """
-        Create and save a SuperUser with the given email and password.
+        Creates and saves a superuser with the given email and password.
         """
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
@@ -41,7 +41,8 @@ class CustomUserManager(BaseUserManager):
 
         user = self.model(email=self.normalize_email(email),
                         first_name=first_name, last_name=last_name,
-                        **extra_fields)
+                        **extra_fields
+                        )
 
         user.set_password(password)
         user.save(using=self._db)
@@ -73,6 +74,14 @@ class CustomUser(AbstractUser):
         else:
             return False
 
+    def is_author(self, project_instance):
+        if self.is_contributor(project_instance):
+            contrib_profile = Contributor.get(project_id=project_instance.id,
+                                            user_id=self.id)
+            if contrib_profile.permission == 'Auteur':
+                return True
+        return False
+
     def __str__(self):
         return self.email
 
@@ -82,7 +91,9 @@ class Contributor(models.Model):
     RESPONSABLE = "Responsable"
     CONTRIBUTOR = "Contributeur"
     PERMISSION_CHOICES = (
-        (AUTHOR, 'Auteur'), (CONTRIBUTOR, 'Contributeur'), (RESPONSABLE, 'Responsable')
+        (AUTHOR, 'Auteur'),
+        (CONTRIBUTOR, 'Contributeur'),
+        (RESPONSABLE, 'Responsable')
         )
 
     user_id = models.IntegerField('user id')
@@ -98,14 +109,17 @@ class Project(models.Model):
     FRONTEND = 'Front-End'
     ANDROID = 'Android'
     TYPE_CHOICES = (
-        (BACKEND, 'Back-End'), (FRONTEND, 'Front-End'), (ANDROID, 'Android')
+        (BACKEND, 'Back-End'),
+        (FRONTEND, 'Front-End'),
+        (ANDROID, 'Android')
         )
 
     title = models.CharField('title', max_length=50)
     description = models.CharField('description', max_length=250)
     type = models.CharField('type', choices=TYPE_CHOICES, max_length=20)
-#NOTE : changer on_delete
-    author_user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    author_user_id = models.ForeignKey(settings.AUTH_USER_MODEL,
+                                    on_delete=models.CASCADE,
+                                    null=True, blank=True)
 
     def create_author(self):
         contrib_profile = Contributor(user_id=self.author_user_id.id,
@@ -131,6 +145,7 @@ class Project(models.Model):
 
     def __str__(self):
         return self.title
+
 
 class Issue(models.Model):
     LOW = 'Basse'
@@ -159,19 +174,20 @@ class Issue(models.Model):
     priority = models.CharField('priority', choices=PRIORITY_CHOICES, max_length=50)
     project_id = models.IntegerField('project id')
     status = models.CharField('status', choices=STATUS_CHOICES, max_length=50)
-#NOTE : changer on_delete
-    author_user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='author')
-#NOTE : moyen d'assigner l'auteur directement ? Sur une fonction, probablement.
-    assignee_user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='assignee')
+    author_user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                        null=True, blank=True, related_name='author')
+    assignee_user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                        null=True, blank=True, related_name='assignee')
     created_time = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
 
+
 class Comment(models.Model):
     description = models.CharField('description', max_length=250)
-#NOTE : changer on_delete
-    author_user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    author_user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                        null=True, blank=True)
     issue_id = models.ForeignKey(Issue, on_delete=models.CASCADE, null=True, blank=True)
     created_time = models.DateTimeField(auto_now_add=True)
 

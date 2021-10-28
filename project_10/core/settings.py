@@ -130,8 +130,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'api_app.CustomUser'
 
 REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
@@ -145,9 +143,3 @@ SIMPLE_JWT = {
 
     'SIGNING_KEY': SECRET_KEY,
     }
-
-LOGIN_URL = '/login'
-
-LOGIN_REDIRECT_URL = '/'
-
-LOGOUT_REDIRECT_URL = '/login'
