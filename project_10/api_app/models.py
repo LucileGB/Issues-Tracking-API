@@ -76,7 +76,7 @@ class CustomUser(AbstractUser):
 
     def is_author(self, project_instance):
         if self.is_contributor(project_instance):
-            contrib_profile = Contributor.get(project_id=project_instance.id,
+            contrib_profile = Contributor.objects.get(project_id=project_instance.id,
                                             user_id=self.id)
             if contrib_profile.permission == 'Auteur':
                 return True
