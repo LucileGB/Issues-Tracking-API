@@ -49,6 +49,7 @@ class ViewContributors(viewsets.ModelViewSet):
     def get_permissions(self):
         project = Project.objects.get(id=self.kwargs['project_pk'])
         user = self.request.user
+        permission_classes = []
         """
         Instantiates and returns the list of permissions that this view requires.
         """
